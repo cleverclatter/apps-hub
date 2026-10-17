@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=overlays-content" />
+  <meta name="color-scheme" content="light dark" />
+  <link rel="icon" href="data:," />
+  <title>Number Sense Trainer</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@500&display=swap');
+    :root {
+      color-scheme: light dark;
+      --viewport-height:100dvh;
+      --paper:#f8f6f0;
+      --surface:#ffffff;
+      --ink:#17211c;
+      --muted:#59635d;
+      --line:#d8ddd7;
+      --soft:#eef2ed;
+      --accent:#087f5b;
+      --accent-ink:#ffffff;
+      --accent-soft:#dff3e9;
+      --warm:#d66a2c;
+      --warm-soft:#fff0e5;
+      --danger:#b43b37;
+      --danger-soft:#fde9e7;
+      --shadow:0 18px 45px rgba(30,44,35,.10);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --paper:#121714;
+        --surface:#1b231e;
+        --ink:#f4f6f3;
+        --muted:#b7c0ba;
+        --line:#38443c;
+        --soft:#253029;
+        --accent:#53d39e;
+        --accent-ink:#08291d;
+        --accent-soft:#1b3e30;
+        --warm:#f3a06d;
+        --warm-soft:#3b291e;
+        --danger:#ff8b84;
+        --danger-soft:#422522;
+        --shadow:0 18px 45px rgba(0,0,0,.28);
+      }
+    }
+    * { box-sizing:border-box; }
+    html,body { min-height:100%; -webkit-text-size-adjust:100%; text-size-adjust:100%; }
+    body {
+      margin:0;
+      font-family:"DM Sans",system-ui,sans-serif;
+      background:var(--paper);
+      color:var(--ink);
+      -webkit-font-smoothing:antialiased;
+      -webkit-tap-highlight-color:transparent;
+    }
+    body.round-active { position:fixed; inset:0; width:100%; height:var(--viewport-height); overflow:hidden; overscroll-behavior:none; }
+    button,input { font:inherit; }
+    button { touch-action:manipulation; }
+    .app { min-height:100svh; }
+    .screen { display:none; }
+    .screen.active { display:block; }
+
+    /* Start */
+    .start-shell { width:min(1040px,100%); margin:0 auto; padding:clamp(24px,5vw,64px) 20px 44px; }
+    .intro { display:grid; grid-template-columns:minmax(0,1.2fr) minmax(280px,.8fr); gap:28px; align-items:end; margin-bottom:30px; }
+    .date-line { margin:0 0 12px; color:var(--accent); font-weight:700; font-size:.92rem; }
+    h1 { font-size:clamp(2.3rem,6vw,5.25rem); letter-spacing:-.055em; line-height:.94; margin:0 0 18px; max-width:780px; }
+    .lead { margin:0; font-size:clamp(1.03rem,2vw,1.25rem); color:var(--muted); max-width:640px; line-height:1.55; }
+    .rules { padding:18px 20px; border-top:3px solid var(--ink); border-bottom:1px solid var(--line); }
+    .rules strong { display:block; font-size:1.08rem; margin-bottom:6px; }
+    .rules p { margin:0; color:var(--muted); line-height:1.5; }
+    .mode-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; }
+    .mode-card { background:var(--surface); border:1px solid var(--line); padding:26px; box-shadow:var(--shadow); display:flex; flex-direction:column; min-height:270px; }
+    .mode-card.quick { box-shadow:none; }
+    .mode-label { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:32px; }
+    .mode-label span:first-child { color:var(--muted); font-weight:700; font-size:.88rem; }
+    .count-chip { background:var(--soft); padding:7px 10px; border-radius:999px; font:500 .78rem "DM Mono",monospace; }
+    .mode-card h2 { margin:0 0 10px; font-size:clamp(1.55rem,3vw,2.25rem); letter-spacing:-.035em; }
+    .mode-card p { margin:0 0 24px; color:var(--muted); line-height:1.5; flex:1; }
+    .primary,.secondary,.ghost { border:0; cursor:pointer; font-weight:700; min-height:52px; padding:13px 18px; }
+    .primary { background:var(--accent); color:var(--accent-ink); }
+    .primary:hover { filter:brightness(.96); }
+    .secondary { background:var(--ink); color:var(--paper); }
+    .ghost { background:var(--soft); color:var(--ink); }
+    .session-note { margin:18px 0 0; font-size:.88rem; color:var(--muted); text-align:center; }
+
+    /* Round */
+    #round { height:var(--viewport-height); min-height:0; overflow:hidden; }
+    .round-shell {
+      width:min(980px,100%);
+      height:var(--viewport-height);
+      min-height:0;
+      margin:0 auto;
+      padding:max(clamp(8px,1.7dvh,16px),env(safe-area-inset-top)) clamp(10px,2.1vw,20px) max(clamp(8px,1.7dvh,18px),env(safe-area-inset-bottom));
+      display:grid;
+      grid-template-rows:auto minmax(0,1fr);
+      gap:clamp(6px,1.4dvh,14px);
+      overflow:hidden;
+    }
+    .round-top { display:grid; grid-template-columns:1fr auto 1fr; align-items:center; border-bottom:1px solid var(--line); padding:0 0 clamp(6px,1.35dvh,12px); }
+    .progress-wrap { min-width:0; }
+    .progress-label { font:500 clamp(.7rem,1.7dvh,.82rem) "DM Mono",monospace; color:var(--muted); }
+    .progress-track { height:clamp(3px,.7dvh,5px); background:var(--line); margin-top:clamp(4px,.8dvh,7px); width:min(240px,100%); }
+    .progress-fill { height:100%; background:var(--accent); width:0; transition:width .18s linear; }
+    .timer { font:500 clamp(1.15rem,min(3.5vw,3.8dvh),2rem) "DM Mono",monospace; letter-spacing:-.04em; padding:2px clamp(8px,1.5vw,14px); }
+    .timer.low { color:var(--danger); }
+    .finish-button { justify-self:end; border:0; background:transparent; color:var(--muted); font-weight:700; font-size:clamp(.75rem,1.8dvh,.88rem); padding:clamp(5px,1dvh,10px) 0 clamp(5px,1dvh,10px) 10px; cursor:pointer; }
+    .work-area { min-height:0; overflow:hidden; display:grid; grid-template-columns:minmax(0,1fr) minmax(250px,310px); gap:clamp(14px,3vw,28px); align-items:center; }
+    .question-panel { min-width:0; min-height:0; }
+    .type-label { color:var(--accent); font-weight:700; font-size:clamp(.76rem,1.8dvh,.9rem); margin-bottom:clamp(5px,1.6dvh,16px); }
+    .question { font-size:clamp(1.55rem,min(5.5vw,7.2dvh),4.7rem); line-height:1.06; letter-spacing:-.045em; font-weight:700; margin:0 0 clamp(8px,3dvh,28px); overflow-wrap:anywhere; }
+    .question.long { font-size:clamp(1.3rem,min(4vw,5.3dvh),3.25rem); line-height:1.1; }
+    .answer-label { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:0 0 clamp(4px,1dvh,8px); color:var(--muted); font-size:clamp(.72rem,1.7dvh,.88rem); font-weight:600; }
+    .answer-input { width:100%; height:clamp(50px,11dvh,94px); padding:8px clamp(12px,2vw,18px); border:2px solid var(--ink); border-radius:0; background:var(--surface); color:var(--ink); font:500 clamp(1.65rem,min(5vw,6dvh),3.3rem) "DM Mono",monospace; outline:none; caret-color:var(--accent); }
+    .answer-input:focus { border-color:var(--accent); box-shadow:0 0 0 4px var(--accent-soft); }
+    .answer-actions { display:grid; grid-template-columns:1fr 2fr; gap:clamp(6px,1vw,10px); margin-top:clamp(6px,1.5dvh,12px); }
+    .answer-actions button { min-height:clamp(38px,6.2dvh,52px); padding-block:clamp(7px,1.2dvh,13px); }
+    .keypad {
+      width:100%;
+      height:min(100%,560px);
+      min-height:0;
+      align-self:center;
+      background:var(--surface);
+      border:1px solid var(--line);
+      padding:clamp(6px,1.6dvh,14px);
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      grid-template-rows:repeat(6,minmax(0,1fr)) auto;
+      gap:clamp(4px,1.1dvh,9px);
+      box-shadow:var(--shadow);
+    }
+    .key { min-width:0; min-height:0; border:0; background:var(--soft); color:var(--ink); font:600 clamp(1rem,min(3vw,3dvh),1.4rem) "DM Mono",monospace; cursor:pointer; }
+    .key:active { background:var(--accent-soft); }
+    .key.enter { grid-column:1/-1; background:var(--accent); color:var(--accent-ink); font-family:"DM Sans",sans-serif; font-size:clamp(.82rem,2dvh,1rem); }
+    .key.back { font-family:"DM Sans",sans-serif; font-size:clamp(1rem,2.8dvh,1.25rem); }
+    .no-feedback { font-size:clamp(.64rem,1.55dvh,.78rem); line-height:1.1; color:var(--muted); text-align:center; grid-column:1/-1; padding-top:clamp(1px,.5dvh,4px); }
+
+    /* Dialog */
+    .veil { display:none; position:fixed; inset:0; z-index:10; background:rgba(9,14,11,.64); padding:20px; align-items:center; justify-content:center; }
+    .veil.open { display:flex; }
+    .dialog { width:min(430px,100%); background:var(--surface); border-top:5px solid var(--warm); padding:26px; box-shadow:var(--shadow); }
+    .dialog h2 { margin:0 0 10px; font-size:1.7rem; }
+    .dialog p { color:var(--muted); line-height:1.5; margin:0 0 20px; }
+    .dialog-actions { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+
+    /* Report */
+    .report-shell { width:min(1040px,100%); margin:0 auto; padding:clamp(24px,5vw,56px) 20px 60px; }
+    .report-head { display:grid; grid-template-columns:minmax(240px,.75fr) minmax(0,1.25fr); gap:28px; align-items:center; padding-bottom:30px; border-bottom:1px solid var(--line); }
+    .score-block { background:var(--ink); color:var(--paper); padding:28px; }
+    .score-caption { font-weight:700; opacity:.72; margin-bottom:8px; }
+    .score { font:500 clamp(3.8rem,9vw,6rem) "DM Mono",monospace; letter-spacing:-.08em; line-height:.95; }
+    .score-denom { opacity:.7; font-size:1.25rem; }
+    .accuracy { margin-top:16px; font-weight:700; }
+    .report-title { margin:0 0 10px; font-size:clamp(2rem,4vw,3.6rem); letter-spacing:-.05em; }
+    .report-copy { color:var(--muted); line-height:1.55; margin:0 0 20px; }
+    .report-actions { display:flex; flex-wrap:wrap; gap:10px; }
+    .section-head { margin:34px 0 14px; font-size:1.35rem; letter-spacing:-.025em; }
+    .breakdown { border-top:2px solid var(--ink); }
+    .skill-row { display:grid; grid-template-columns:minmax(150px,1fr) 120px 1.5fr; gap:18px; align-items:center; padding:13px 4px; border-bottom:1px solid var(--line); }
+    .skill-name { font-weight:650; }
+    .skill-score { font:500 .88rem "DM Mono",monospace; color:var(--muted); }
+    .bar { height:8px; background:var(--line); }
+    .bar > i { display:block; height:100%; background:var(--accent); }
+    .missed-list { display:grid; gap:10px; }
+    .miss-card { background:var(--surface); border:1px solid var(--line); padding:18px 20px; display:grid; grid-template-columns:42px minmax(0,1fr) auto; gap:14px; align-items:start; }
+    .miss-num { width:34px; height:34px; display:grid; place-items:center; background:var(--danger-soft); color:var(--danger); font:500 .8rem "DM Mono",monospace; }
+    .miss-question { font-weight:700; font-size:1.05rem; margin-bottom:6px; }
+    .miss-answer { color:var(--muted); font-size:.92rem; }
+    .correct-answer { text-align:right; }
+    .correct-answer small { display:block; color:var(--muted); }
+    .correct-answer strong { color:var(--accent); font:500 1.05rem "DM Mono",monospace; }
+    .perfect { padding:24px; background:var(--accent-soft); font-weight:700; }
+
+    @media (max-width:760px) {
+      .intro { grid-template-columns:1fr; align-items:start; }
+      .mode-grid { grid-template-columns:1fr; }
+      .mode-card { min-height:235px; }
+      .report-head { grid-template-columns:1fr; }
+      .skill-row { grid-template-columns:minmax(130px,1fr) auto; gap:10px; }
+      .skill-row .bar { grid-column:1/-1; }
+      .miss-card { grid-template-columns:36px 1fr; }
+      .correct-answer { grid-column:2; text-align:left; }
+    }
+    @media (max-width:820px) and (orientation:portrait) {
+      .round-shell { padding-inline:clamp(8px,3.5vw,18px); }
+      .work-area { grid-template-columns:1fr; grid-template-rows:auto minmax(0,1fr); gap:clamp(5px,1dvh,10px); align-items:stretch; }
+      .question-panel { width:min(100%,680px); margin:0 auto; }
+      .type-label { margin-bottom:clamp(2px,.65dvh,6px); }
+      .question { font-size:clamp(1.4rem,min(8vw,4.8dvh),3.2rem); line-height:1.02; margin-bottom:clamp(5px,1dvh,10px); }
+      .answer-label { margin-bottom:clamp(3px,.6dvh,6px); }
+      .answer-input { height:clamp(44px,7.3dvh,70px); font-size:clamp(1.55rem,min(7vw,4.5dvh),2.8rem); }
+      .answer-actions { margin-top:clamp(4px,.7dvh,7px); }
+      .answer-actions button { min-height:clamp(36px,5.2dvh,48px); padding-block:5px; }
+      .keypad { width:min(100%,680px); height:100%; margin:0 auto; padding:clamp(5px,.9dvh,10px); gap:clamp(3px,.65dvh,7px); box-shadow:none; }
+      .key { font-size:clamp(1rem,min(5vw,2.8dvh),1.35rem); }
+    }
+    @media (max-height:620px) and (orientation:landscape) {
+      .round-shell { padding-block:max(6px,env(safe-area-inset-top)) max(6px,env(safe-area-inset-bottom)); gap:5px; }
+      .round-top { padding-bottom:5px; }
+      .work-area { grid-template-columns:minmax(0,1fr) minmax(220px,34%); gap:clamp(10px,2vw,20px); }
+      .type-label { margin-bottom:4px; }
+      .question { font-size:clamp(1.35rem,min(4.3vw,6.6dvh),2.6rem); margin-bottom:6px; }
+      .answer-input { height:clamp(42px,12dvh,62px); }
+      .answer-actions { margin-top:5px; }
+      .answer-actions button { min-height:34px; padding-block:4px; }
+      .keypad { height:100%; padding:5px; gap:3px; }
+      .no-feedback { padding-top:0; }
+    }
+    @media (prefers-reduced-motion:reduce) { *,*::before,*::after { transition:none !important; scroll-behavior:auto !important; } }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section id="start" class="screen active" aria-labelledby="start-title">
+      <div class="start-shell">
+        <div class="intro">
+          <div>
+            <p class="date-line">Math League · October Qualifier</p>
+            <h1 id="start-title">Think fast.<br>Answer cleanly.</h1>
+            <p class="lead">Mental-math practice built for speed. Write each answer with Apple Pencil or use the keypad. No calculator and no written work.</p>
+          </div>
+          <div class="rules">
+            <strong>Answers are graded at the end.</strong>
+            <p>There are no pop-ups or corrections during a round—just answer, enter, and keep moving.</p>
+          </div>
+        </div>
+        <div class="mode-grid">
+          <article class="mode-card">
+            <div class="mode-label"><span>CONTEST PRACTICE</span><span class="count-chip">80 questions</span></div>
+            <h2>Full round</h2>
+            <p>Race the 10-minute clock. When time expires, the round submits automatically.</p>
+            <button class="primary" id="start-full">Start 10-minute round</button>
+          </article>
+          <article class="mode-card quick">
+            <div class="mode-label"><span>SKILL PRACTICE</span><span class="count-chip">20 questions</span></div>
+            <h2>Quick drill</h2>
+            <p>Twenty untimed questions, with extra practice from skills missed earlier in this tab.</p>
+            <button class="secondary" id="start-quick">Start quick drill</button>
+          </article>
+        </div>
+        <p class="session-note">Practice adapts while this page stays open. Starting a new browser session begins fresh.</p>
+      </div>
+    </section>
+
+    <section id="round" class="screen" aria-labelledby="question-text">
+      <div class="round-shell">
+        <header class="round-top">
+          <div class="progress-wrap">
+            <div class="progress-label" id="progress-label">1 / 80</div>
+            <div class="progress-track" aria-hidden="true"><div class="progress-fill" id="progress-fill"></div></div>
+          </div>
+          <div class="timer" id="timer" aria-live="off">10:00</div>
+          <button class="finish-button" id="finish-open">Finish early</button>
+        </header>
+        <div class="work-area">
+          <section class="question-panel">
+            <div class="type-label" id="type-label">Addition</div>
+            <h2 class="question" id="question-text">48 + 27 = ?</h2>
+            <label class="answer-label" for="answer-input"><span>Write or type your answer</span><span>Enter = next</span></label>
+            <input class="answer-input" id="answer-input" type="text" inputmode="none" enterkeyhint="next" autocomplete="off" autocapitalize="off" spellcheck="false" readonly aria-describedby="answer-note" />
+            <div class="answer-actions">
+              <button class="ghost" id="skip">Skip</button>
+              <button class="primary" id="next">Enter answer</button>
+            </div>
+          </section>
+          <section class="keypad" aria-label="Answer keypad">
+            <button class="key" data-key="7">7</button><button class="key" data-key="8">8</button><button class="key" data-key="9">9</button>
+            <button class="key" data-key="4">4</button><button class="key" data-key="5">5</button><button class="key" data-key="6">6</button>
+            <button class="key" data-key="1">1</button><button class="key" data-key="2">2</button><button class="key" data-key="3">3</button>
+            <button class="key" data-key="-">−</button><button class="key" data-key="0">0</button><button class="key" data-key=".">.</button>
+            <button class="key" data-key="/">/</button><button class="key back" data-key="back" aria-label="Backspace">⌫</button><button class="key" data-key="clear">C</button>
+            <button class="key enter" data-key="enter">Enter answer</button>
+            <div class="no-feedback" id="answer-note">No checking during the round.</div>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <section id="report" class="screen" aria-labelledby="report-title">
+      <div class="report-shell">
+        <div class="report-head">
+          <div class="score-block">
+            <div class="score-caption">Correct answers</div>
+            <div><span class="score" id="report-score">0</span> <span class="score-denom" id="report-denom">/ 20</span></div>
+            <div class="accuracy" id="report-accuracy">0% accuracy</div>
+          </div>
+          <div>
+            <h1 class="report-title" id="report-title">Round complete</h1>
+            <p class="report-copy" id="report-copy">Review the skills below, then try another round.</p>
+            <div class="report-actions">
+              <button class="primary" id="retry-mode">Try this mode again</button>
+              <button class="ghost" id="choose-mode">Choose another mode</button>
+            </div>
+          </div>
+        </div>
+        <h2 class="section-head">Skill breakdown</h2>
+        <div class="breakdown" id="breakdown"></div>
+        <h2 class="section-head">Missed questions</h2>
+        <div class="missed-list" id="missed-list"></div>
+      </div>
+    </section>
+  </main>
+
+  <div class="veil" id="finish-veil" role="dialog" aria-modal="true" aria-labelledby="finish-title">
+    <div class="dialog">
+      <h2 id="finish-title">Finish this round?</h2>
+      <p>Your answers so far will be graded. Unanswered questions will count as skipped.</p>
+      <div class="dialog-actions">
+        <button class="ghost" id="keep-going">Keep going</button>
+        <button class="primary" id="finish-now">Grade now</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      function syncViewportHeight(){
+        var height=window.visualViewport?window.visualViewport.height:window.innerHeight;
+        document.documentElement.style.setProperty('--viewport-height',Math.round(height)+'px');
+      }
+      syncViewportHeight();
+      window.addEventListener('resize',syncViewportHeight);
+      if(window.visualViewport)window.visualViewport.addEventListener('resize',syncViewportHeight);
+
+      var TYPES = [
+        {id:'addition', name:'Addition', make:function(){var a=r(18,899),b=r(12,799);return q(a+' + '+b+' = ?',a+b);}},
+        {id:'subtraction', name:'Subtraction', make:function(){var b=r(12,650),a=b+r(10,700);return q(a+' − '+b+' = ?',a-b);}},
+        {id:'mul1x2', name:'1-digit × 2-digit', make:function(){var a=r(2,9),b=r(12,99);return q(a+' × '+b+' = ?',a*b);}},
+        {id:'mul2x2', name:'2-digit × 2-digit', make:function(){var a=r(11,49),b=r(11,39);return q(a+' × '+b+' = ?',a*b);}},
+        {id:'mul11', name:'Multiply by 11', make:function(){var a=r(12,99);return q(a+' × 11 = ?',a*11);}},
+        {id:'division', name:'Exact division', make:function(){var b=r(2,14),ans=r(3,40);return q((b*ans)+' ÷ '+b+' = ?',ans);}},
+        {id:'remainders', name:'Remainders', make:function(){var b=r(3,14),rem=r(1,b-1),n=b*r(3,25)+rem;return q('Remainder when '+n+' is divided by '+b+'?',rem);}},
+        {id:'place', name:'Place value', make:function(){var n=r(10000,999999),places=[1,10,100,1000,10000],p=pick(places.filter(function(x){return x<=n;})),names={1:'ones',10:'tens',100:'hundreds',1000:'thousands',10000:'ten-thousands'};return q('What digit is in the '+names[p]+' place of '+fmt(n)+'?',Math.floor(n/p)%10);}},
+        {id:'estimate', name:'Estimation', make:function(){var a=r(120,9800),b=r(120,9800),ra=greatestRound(a),rb=greatestRound(b);return q('Estimate '+fmt(a)+' + '+fmt(b)+'. Round each number to its greatest place first.',ra+rb);}},
+        {id:'rounding', name:'Rounding', make:function(){if(Math.random()<.5){var x=r(105,999);return q('Round '+x+' to the nearest ten.',Math.round(x/10)*10);}var whole=r(8,199),tenth=r(1,9);return q('Round '+whole+'.'+tenth+' to the nearest whole number.',whole+(tenth>=5?1:0));}},
+        {id:'fractionReduce', name:'Fractions in lowest terms', make:function(){var den=r(3,12),num=r(1,den-1),factor=r(2,9),g=gcd(num,den);num/=g;den/=g;return q('Write '+(num*factor)+'/'+(den*factor)+' in lowest terms.',num+'/'+den,{strictFraction:true});}},
+        {id:'fractionDecimal', name:'Fractions to decimals', make:function(){var pairs=[[1,2],[1,4],[3,4],[1,5],[2,5],[3,5],[4,5],[1,10],[3,10],[7,10],[1,8],[3,8],[5,8],[7,8]],p=pick(pairs);return q('Write '+p[0]+'/'+p[1]+' as a decimal.',p[0]/p[1]);}},
+        {id:'gcd', name:'Greatest common divisor', make:function(){var g=pick([2,3,4,5,6,7,8,9,10,12]),a=g*r(2,9),b=g*r(2,9);while(gcd(a,b)!==g){b=g*r(2,9);}return q('GCD of '+a+' and '+b+' = ?',g);}},
+        {id:'money', name:'Money', make:function(){var quarters=r(1,7),dimes=r(1,8),nickels=r(0,6);return q(quarters+' quarters + '+dimes+' dimes + '+nickels+' nickels = how many cents?',quarters*25+dimes*10+nickels*5);}},
+        {id:'time', name:'Time conversions', make:function(){var variants=[function(){var h=r(2,12);return q(h+' hours = how many minutes?',h*60);},function(){var d=r(2,14);return q(d+' days = how many hours?',d*24);},function(){var w=r(2,9);return q(w+' weeks = how many days?',w*7);},function(){var m=pick([2,3,4,5,6,8,10]);return q(m+' minutes = how many seconds?',m*60);}];return pick(variants)();}},
+        {id:'percent', name:'Percentages', make:function(){var pct=pick([10,20,25,50,75]),base=pick([20,40,60,80,100,120,160,200]);return q(pct+'% of '+base+' = ?',pct*base/100);}},
+        {id:'perimeter', name:'Rectangle perimeter', make:function(){var l=r(4,28),w=r(2,l-1);return q('A rectangle is '+l+' units long and '+w+' units wide. What is its perimeter?',2*(l+w));}},
+        {id:'squareArea', name:'Square area', make:function(){var s=r(3,25);return q('A square has side length '+s+'. What is its area?',s*s);}},
+        {id:'expanded', name:'Expanded form', make:function(){var a=r(1,9),b=r(0,9),c=r(0,9),d=r(0,9);return q(a+'×1000 + '+b+'×100 + '+c+'×10 + '+d+' = ?',a*1000+b*100+c*10+d);}},
+        {id:'multi', name:'Multiply then divide', make:function(){var c=r(2,12),x=r(2,18),b=r(2,12),a=c*x;return q(a+' × '+b+' ÷ '+c+' = ?',x*b);}},
+        {id:'negative', name:'Negative integers', make:function(){var a=r(-20,8),b=r(4,18);return q(a+' − '+b+' = ?',a-b);}},
+        {id:'roman', name:'Roman numerals', make:function(){var n=r(4,99),roman=toRoman(n);return q(roman+' = what number?',n);}},
+        {id:'units', name:'Unit conversions', make:function(){var choices=[function(){var f=r(2,18);return q(f+' feet = how many inches?',f*12);},function(){var ft=r(2,20),inch=pick([0,3,6,9]);return q(ft+' feet '+inch+' inches = how many inches?',ft*12+inch);},function(){var m=r(2,8);return q(m+' miles = how many feet?',m*5280);}];return pick(choices)();}}
+      ];
+
+      var sessionStats = {};
+      TYPES.forEach(function(t){sessionStats[t.id]={right:0,total:0};});
+      var state = {mode:'quick', limit:20, seconds:null, questions:[], answers:[], index:0, remaining:0, timerId:null, submitted:false};
+      var pencilEditing=false;
+
+      var els = {
+        screens:document.querySelectorAll('.screen'), start:document.getElementById('start'), round:document.getElementById('round'), report:document.getElementById('report'),
+        progressLabel:document.getElementById('progress-label'), progressFill:document.getElementById('progress-fill'), timer:document.getElementById('timer'),
+        typeLabel:document.getElementById('type-label'), questionText:document.getElementById('question-text'), input:document.getElementById('answer-input'),
+        veil:document.getElementById('finish-veil'), score:document.getElementById('report-score'), denom:document.getElementById('report-denom'), accuracy:document.getElementById('report-accuracy'),
+        reportTitle:document.getElementById('report-title'), reportCopy:document.getElementById('report-copy'), breakdown:document.getElementById('breakdown'), missed:document.getElementById('missed-list')
+      };
+
+      function r(min,max){return Math.floor(Math.random()*(max-min+1))+min;}
+      function pick(a){return a[Math.floor(Math.random()*a.length)];}
+      function gcd(a,b){a=Math.abs(a);b=Math.abs(b);while(b){var t=b;b=a%b;a=t;}return a;}
+      function q(prompt,answer,opts){return Object.assign({prompt:prompt,answer:answer},opts||{});}
+      function fmt(n){return String(n).replace(/\B(?=(\d{3})+(?!\d))/g,',');}
+      function greatestRound(n){var p=Math.pow(10,String(Math.floor(Math.abs(n))).length-1);return Math.round(n/p)*p;}
+      function toRoman(n){var map=[[90,'XC'],[50,'L'],[40,'XL'],[10,'X'],[9,'IX'],[5,'V'],[4,'IV'],[1,'I']],out='';map.forEach(function(pair){while(n>=pair[0]){out+=pair[1];n-=pair[0];}});return out;}
+      function typeById(id){return TYPES.filter(function(t){return t.id===id;})[0];}
+      function show(screen){els.screens.forEach(function(s){s.classList.remove('active');});screen.classList.add('active');document.body.classList.toggle('round-active',screen===els.round);window.scrollTo(0,0);}
+      function typeWeight(type){var s=sessionStats[type.id];if(!s.total)return 1;var miss=1-(s.right/s.total);return 1+miss*3;}
+      function weightedType(){var total=TYPES.reduce(function(sum,t){return sum+typeWeight(t);},0),point=Math.random()*total;for(var i=0;i<TYPES.length;i++){point-=typeWeight(TYPES[i]);if(point<=0)return TYPES[i];}return TYPES[TYPES.length-1];}
+      function buildQuestions(limit){var selected=[];if(limit>=TYPES.length){selected=TYPES.slice();}while(selected.length<limit)selected.push(weightedType());for(var i=selected.length-1;i>0;i--){var j=r(0,i),tmp=selected[i];selected[i]=selected[j];selected[j]=tmp;}return selected.map(function(t){var item=t.make();item.typeId=t.id;item.typeName=t.name;return item;});}
+
+      function startRound(mode){
+        state.mode=mode; state.limit=mode==='full'?80:20; state.seconds=mode==='full'?600:null; state.remaining=state.seconds; state.questions=buildQuestions(state.limit); state.answers=[]; state.index=0; state.submitted=false;
+        clearInterval(state.timerId); els.timer.style.visibility=mode==='full'?'visible':'hidden'; els.timer.classList.remove('low');
+        show(els.round); renderQuestion();
+        if(mode==='full'){renderTime();state.timerId=setInterval(function(){state.remaining--;renderTime();if(state.remaining<=0)finishRound(true);},1000);}
+      }
+      function renderTime(){var m=Math.floor(state.remaining/60),s=state.remaining%60;els.timer.textContent=m+':'+String(s).padStart(2,'0');els.timer.classList.toggle('low',state.remaining<=60);}
+      function renderQuestion(){
+        if(state.index>=state.limit){finishRound(false);return;}
+        var item=state.questions[state.index];
+        els.progressLabel.textContent=(state.index+1)+' / '+state.limit;
+        els.progressFill.style.width=(state.index/state.limit*100)+'%';
+        els.typeLabel.textContent=item.typeName;
+        els.questionText.textContent=item.prompt;
+        els.questionText.classList.toggle('long',item.prompt.length>46);
+        els.input.value='';
+        els.input.readOnly=true;
+        pencilEditing=false;
+      }
+      function settleAnswerInput(){
+        els.input.readOnly=true;
+        pencilEditing=false;
+      }
+      function capture(skip){
+        if(state.submitted)return;
+        state.answers[state.index]={raw:skip?'':els.input.value.trim(),skipped:!!skip};
+        state.index++;
+        renderQuestion();
+      }
+      function parseNumeric(raw){var cleaned=raw.replace(/,/g,'').replace(/\s+/g,'');if(/^[-+]?\d+(\.\d+)?\/[-+]?\d+(\.\d+)?$/.test(cleaned)){var p=cleaned.split('/'),den=Number(p[1]);return den===0?NaN:Number(p[0])/den;}if(/^[-+]?\d*\.?\d+$/.test(cleaned))return Number(cleaned);return NaN;}
+      function isCorrect(item,raw){
+        if(!raw)return false;
+        if(item.text)return raw.toUpperCase().replace(/\s+/g,'')===String(item.answer).toUpperCase();
+        if(item.strictFraction){var cleaned=raw.replace(/\s+/g,'');if(!/^-?\d+\/\d+$/.test(cleaned))return false;var p=cleaned.split('/'),num=Number(p[0]),den=Number(p[1]),target=String(item.answer).split('/');return den!==0&&gcd(num,den)===1&&num===Number(target[0])&&den===Number(target[1]);}
+        var value=parseNumeric(raw);return Number.isFinite(value)&&Math.abs(value-Number(item.answer))<1e-9;
+      }
+      function answerDisplay(item){return String(item.answer);}
+
+      function finishRound(timedOut){
+        if(state.submitted)return;
+        state.submitted=true;clearInterval(state.timerId);els.veil.classList.remove('open');
+        while(state.answers.length<state.limit)state.answers.push({raw:'',skipped:true});
+        var results=state.questions.map(function(item,i){var raw=state.answers[i]?state.answers[i].raw:'';return {item:item,raw:raw,correct:isCorrect(item,raw),number:i+1};});
+        results.forEach(function(res){var s=sessionStats[res.item.typeId];s.total++;if(res.correct)s.right++;});
+        renderReport(results,timedOut);show(els.report);
+      }
+      function renderReport(results,timedOut){
+        var correct=results.filter(function(x){return x.correct;}).length,accuracy=Math.round(correct/results.length*100),answered=results.filter(function(x){return x.raw;}).length;
+        els.score.textContent=correct;els.denom.textContent='/ '+results.length;els.accuracy.textContent=accuracy+'% accuracy';
+        els.reportTitle.textContent=timedOut?'Time’s up':'Round complete';
+        els.reportCopy.textContent=correct+' correct · '+(results.length-correct)+' missed · '+answered+' answered. Review the misses, then the next round will favor the skills that need more work.';
+        var grouped={};results.forEach(function(res){if(!grouped[res.item.typeId])grouped[res.item.typeId]={name:res.item.typeName,right:0,total:0};grouped[res.item.typeId].total++;if(res.correct)grouped[res.item.typeId].right++;});
+        els.breakdown.innerHTML=Object.keys(grouped).sort(function(a,b){var A=grouped[a],B=grouped[b];return A.right/A.total-B.right/B.total;}).map(function(id){var s=grouped[id],pct=Math.round(s.right/s.total*100);return '<div class="skill-row"><div class="skill-name">'+esc(s.name)+'</div><div class="skill-score">'+s.right+' / '+s.total+' correct</div><div class="bar" aria-label="'+pct+' percent"><i style="width:'+pct+'%"></i></div></div>';}).join('');
+        var misses=results.filter(function(x){return !x.correct;});
+        els.missed.innerHTML=misses.length?misses.map(function(res){var mine=res.raw?esc(res.raw):'<em>Skipped</em>';return '<article class="miss-card"><div class="miss-num">'+res.number+'</div><div><div class="miss-question">'+esc(res.item.prompt)+'</div><div class="miss-answer">Your answer: '+mine+'</div></div><div class="correct-answer"><small>Correct answer</small><strong>'+esc(answerDisplay(res.item))+'</strong></div></article>';}).join(''):'<div class="perfect">Perfect round—every answer is correct.</div>';
+      }
+      function esc(value){return String(value).replace(/[&<>'"]/g,function(ch){return {'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch];});}
+
+      document.getElementById('start-full').addEventListener('click',function(){startRound('full');});
+      document.getElementById('start-quick').addEventListener('click',function(){startRound('quick');});
+      document.getElementById('next').addEventListener('click',function(){capture(false);});
+      document.getElementById('skip').addEventListener('click',function(){capture(true);});
+      els.input.addEventListener('pointerdown',function(e){
+        pencilEditing=e.pointerType==='pen';
+        els.input.readOnly=!pencilEditing;
+      });
+      els.input.addEventListener('blur',settleAnswerInput);
+      els.input.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();capture(false);}});
+      document.querySelectorAll('[data-key]').forEach(function(key){key.addEventListener('click',function(){var val=key.getAttribute('data-key');settleAnswerInput();if(val==='enter'){capture(false);return;}if(val==='back'){els.input.value=els.input.value.slice(0,-1);}else if(val==='clear'){els.input.value='';}else{els.input.value+=val;}});});
+      document.getElementById('finish-open').addEventListener('click',function(){els.veil.classList.add('open');document.getElementById('keep-going').focus();});
+      document.getElementById('keep-going').addEventListener('click',function(){els.veil.classList.remove('open');settleAnswerInput();});
+      document.getElementById('finish-now').addEventListener('click',function(){finishRound(false);});
+      els.veil.addEventListener('click',function(e){if(e.target===els.veil){els.veil.classList.remove('open');settleAnswerInput();}});
+      document.getElementById('retry-mode').addEventListener('click',function(){startRound(state.mode);});
+      document.getElementById('choose-mode').addEventListener('click',function(){show(els.start);});
+    }());
+  </script>
+</body>
+</html>
